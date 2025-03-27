@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public enum UseableItem
+public enum HandChoice
 {
 	None,
 	Rock,

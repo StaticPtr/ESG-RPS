@@ -3,93 +3,79 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using UnityEngine.Serialization;
 
 public class GameController : MonoBehaviour
 {
-	public Text playerHand = null!;
-	public Text enemyHand = null!;
-
-	private Text _nameLabel = null!;
-	private Text _moneyLabel = null!;
+	public Text PlayerHandLabel = null!;
+	public Text OpponentHandLabel = null!;
+	public Text PlayerNameLabel = null!;
+	public Text PlayerMoneyLabel = null!;
 
 	private Player _player = null!;
 
-	void Awake()
-	{
-		_nameLabel = transform.Find ("Canvas/Name").GetComponent<Text>();
-		_moneyLabel = transform.Find ("Canvas/Money").GetComponent<Text>();
-	}
-
-	void Start()
+	private void Start()
 	{
 		PlayerInfoLoader playerInfoLoader = new PlayerInfoLoader();
 		playerInfoLoader.OnLoaded += OnPlayerInfoLoaded;
-		playerInfoLoader.load();
+		playerInfoLoader.Load();
 	}
 
-	void Update()
+	private void Update()
 	{
 		UpdateHud();
 	}
 
-	public void OnPlayerInfoLoaded(Hashtable playerData)
+	private void OnPlayerInfoLoaded(Hashtable playerData)
 	{
 		_player = new Player(playerData);
 	}
 
 	public void UpdateHud()
 	{
-		_nameLabel.text = "Name: " + _player.GetName();
-		_moneyLabel.text = "Money: $" + _player.GetCoins().ToString();
+		PlayerNameLabel.text = $"Name: {_player.GetName()}";
+		PlayerMoneyLabel.text = $"Money: ${_player.GetMoney()}";
 	}
 
-	public void HandlePlayerInput(int item)
+	public void HandlePlayerInput(int choice)
 	{
-		UseableItem playerChoice = UseableItem.None;
+		HandChoice playerChoice = HandChoice.None;
 
-		switch (item)
+		switch (choice)
 		{
 			case 1:
-				playerChoice = UseableItem.Rock;
+				playerChoice = HandChoice.Rock;
 				break;
 			case 2:
-				playerChoice = UseableItem.Paper;
+				playerChoice = HandChoice.Paper;
 				break;
 			case 3:
-				playerChoice = UseableItem.Scissors;
+				playerChoice = HandChoice.Scissors;
 				break;
 		}
 
 		UpdateGame(playerChoice);
 	}
 
-	private void UpdateGame(UseableItem playerChoice)
+	private void UpdateGame(HandChoice playerChoice)
 	{
 		UpdateGameLoader updateGameLoader = new UpdateGameLoader(playerChoice);
 		updateGameLoader.OnLoaded += OnGameUpdated;
-		updateGameLoader.load();
+		updateGameLoader.Load();
 	}
 
 	public void OnGameUpdated(Hashtable gameUpdateData)
 	{
-		playerHand.text = DisplayResultAsText((UseableItem)gameUpdateData["resultPlayer"]);
-		enemyHand.text = DisplayResultAsText((UseableItem)gameUpdateData["resultOpponent"]);
+		PlayerHandLabel.text = HandChoiceToString((HandChoice)gameUpdateData["resultPlayer"]);
+		OpponentHandLabel.text = HandChoiceToString((HandChoice)gameUpdateData["resultOpponent"]);
 
-		_player.ChangeCoinAmount((int)gameUpdateData["coinsAmountChange"]);
+		_player.AddMoney((int)gameUpdateData["coinsAmountChange"]);
 	}
 
-	private string DisplayResultAsText (UseableItem result)
+	private string HandChoiceToString (HandChoice result)
 	{
-		switch (result)
-		{
-			case UseableItem.Rock:
-				return "Rock";
-			case UseableItem.Paper:
-				return "Paper";
-			case UseableItem.Scissors:
-				return "Scissors";
-		}
-
-		return "Nothing";
+		//In the future this can go through some sort of localizer.
+		//But the version provided to me could be simplified as:
+		return result.ToString();
 	}
 }

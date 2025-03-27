@@ -7,7 +7,7 @@ public class PlayerInfoLoader
 	public delegate void OnLoadedAction(Hashtable playerData);
 	public event OnLoadedAction? OnLoaded;
 
-	public void load()
+	public void Load()
 	{
 		Hashtable mockPlayerData = new Hashtable();
 		mockPlayerData["userId"] = 1;

@@ -6,16 +6,16 @@ public class Player
 {
 	private int _userId;
 	private string _name;
-	private int _coins;
+	private int _money;
 
 	public Player(Hashtable playerData)
 	{
 		_userId = (int)playerData["userId"];
 		_name = playerData["name"].ToString (); 
-		_coins = (int)playerData["coins"];
+		_money = (int)playerData["coins"];
 	}
 	
-	public int GetUserId()
+	public int GetUserID()
 	{
 		return _userId;
 	}
@@ -25,13 +25,13 @@ public class Player
 		return _name;
 	}
 
-	public int GetCoins()
+	public int GetMoney()
 	{
-		return _coins;
+		return _money;
 	}
 
-	public void ChangeCoinAmount(int amount)
+	public void AddMoney(int delta)
 	{
-		_coins += amount;
+		_money += delta;
 	}
 }
