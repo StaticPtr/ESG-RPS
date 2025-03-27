@@ -3,38 +3,47 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System;
-using UnityEngine.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 
 public class GameController : MonoBehaviour
 {
+	private readonly CancellationTokenSource _cancellationTokenSource = new();
+	
 	public Text PlayerHandLabel = null!;
 	public Text OpponentHandLabel = null!;
 	public Text PlayerNameLabel = null!;
 	public Text PlayerMoneyLabel = null!;
 
-	private Player _player = null!;
+	private Player? _player;
 
-	private void Start()
+	private async void Start()
 	{
-		PlayerInfoLoader playerInfoLoader = new PlayerInfoLoader();
-		playerInfoLoader.OnLoaded += OnPlayerInfoLoaded;
-		playerInfoLoader.Load();
+		PlayerInfoLoader playerInfoLoader = new MockPlayerInfoLoader(MockConstants.PLAYER_INFO_RESOURCE);
+		IPlayerInfo playerInfo = await playerInfoLoader.Load(_cancellationTokenSource.Token);
+		_player = new(playerInfo);
+	}
+
+	private void OnDestroy()
+	{
+		_cancellationTokenSource.Cancel();
 	}
 
 	private void Update()
 	{
+		if (_player is null)
+			return;
+		
 		UpdateHud();
 	}
 
-	private void OnPlayerInfoLoaded(Hashtable playerData)
+	private void UpdateHud()
 	{
-		_player = new Player(playerData);
-	}
-
-	public void UpdateHud()
-	{
-		PlayerNameLabel.text = $"Name: {_player.GetName()}";
-		PlayerMoneyLabel.text = $"Money: ${_player.GetMoney()}";
+		if (_player is null)
+			throw new ArgumentNullException(nameof(_player));
+		
+		PlayerNameLabel.text = $"Name: {_player.Name}";
+		PlayerMoneyLabel.text = $"Money: {_player.Money:C2}";
 	}
 
 	public void HandlePlayerInput(int choice)
@@ -66,6 +75,9 @@ public class GameController : MonoBehaviour
 
 	public void OnGameUpdated(Hashtable gameUpdateData)
 	{
+		if (_player is null)
+			throw new ArgumentNullException(nameof(_player));
+		
 		PlayerHandLabel.text = HandChoiceToString((HandChoice)gameUpdateData["resultPlayer"]);
 		OpponentHandLabel.text = HandChoiceToString((HandChoice)gameUpdateData["resultOpponent"]);
 

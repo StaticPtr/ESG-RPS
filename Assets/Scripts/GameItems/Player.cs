@@ -2,36 +2,21 @@
 using System.Collections;
 using System;
 
-public class Player
+public class Player : IPlayerInfo
 {
-	private int _userId;
-	private string _name;
-	private int _money;
+	public string UserID { get; private set; }
+	public string Name { get; private set; }
+	public decimal Money { get; private set; }
 
-	public Player(Hashtable playerData)
+	public Player(IPlayerInfo initialInfo)
 	{
-		_userId = (int)playerData["userId"];
-		_name = playerData["name"].ToString (); 
-		_money = (int)playerData["coins"];
-	}
-	
-	public int GetUserID()
-	{
-		return _userId;
-	}
-	
-	public string GetName()
-	{
-		return _name;
+		UserID = initialInfo.UserID;
+		Name = initialInfo.Name;
+		Money = initialInfo.Money;
 	}
 
-	public int GetMoney()
+	public void AddMoney(decimal delta)
 	{
-		return _money;
-	}
-
-	public void AddMoney(int delta)
-	{
-		_money += delta;
+		Money += delta;
 	}
 }
