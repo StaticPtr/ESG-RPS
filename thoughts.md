@@ -37,3 +37,6 @@ Thoughts while I'm editting names:
 * I definitely want to change the Hashtable. I don't like the boxing and the weak typing.
 * UseableItem is in its own file, but Result is not.
 * There's no documentation anywhere. A lot of it doesn't need it, especially after my renaming, as each function is pretty single use. But I should do a pass on this before I'm done just to make sure there's no confusion.
+
+---
+
