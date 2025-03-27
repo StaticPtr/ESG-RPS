@@ -1,70 +1,55 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
-
-public enum GameResult
-{
-	Won,
-	Lost,
-	Draw
-}
 
 public static class RockPaperScissorsUtility
 {
-	public static GameResult GetResult(HandChoice playerHand, HandChoice opponent)
+	public static GameResult CompareHands(HandChoice playerHand, HandChoice opponent)
 	{
 		if (IsHandStronger(playerHand, opponent))
 		{
 			return GameResult.Won;
 		}
-		else if (IsHandStronger(opponent, playerHand))
+
+		if (IsHandStronger(opponent, playerHand))
 		{
 			return GameResult.Lost;
 		}
-		else
-		{
-			return GameResult.Draw;
-		}
+
+		return GameResult.Draw;
 	}
 
-	private static bool IsHandStronger (HandChoice firstHand, HandChoice secondHand)
+	/// <summary>
+	/// Returns true if the provided hand is a usable rock, paper, or scissors hand.
+	/// </summary>
+	public static bool IsUsableHand(HandChoice hand)
 	{
+		return hand is HandChoice.Rock or HandChoice.Paper or HandChoice.Scissors;
+	}
+	
+	/// <summary>
+	/// Returns true if the first hand is stronger than the second hand
+	/// </summary>
+	/// <exception cref="ArgumentException">One of the hands is not rock, paper, or scissors.</exception>
+	public static bool IsHandStronger (HandChoice firstHand, HandChoice secondHand)
+	{
+		if (!IsUsableHand(firstHand))
+			throw new ArgumentException("Hand is not usable in a game", nameof(firstHand));
+		
+		if (!IsUsableHand(secondHand))
+			throw new ArgumentException("Hand is not usable in a game", nameof(secondHand));
+		
 		switch (firstHand)
 		{
-			case HandChoice.Rock:
-			{
-				switch (secondHand)
-				{
-					case HandChoice.Scissors:
-						return true;
-					case HandChoice.Paper:
-						return false;
-				}
-				break;
-			}
 			case HandChoice.Paper:
-			{
-				switch (secondHand)
-				{
-					case HandChoice.Rock:
-						return true;
-					case HandChoice.Scissors:
-						return false;
-				}
-				break;
-			}
+				return secondHand is HandChoice.Rock;
+			case HandChoice.Rock:
+				return secondHand is HandChoice.Scissors;
 			case HandChoice.Scissors:
-			{
-				switch (secondHand)
-				{
-					case HandChoice.Paper:
-						return true;
-					case HandChoice.Rock:
-						return false;
-				}
-				break;
-			}
+				return secondHand is HandChoice.Paper;
 		}
 
-		return false;
+		//Will never reach
+		throw new Exception();
 	}
 }

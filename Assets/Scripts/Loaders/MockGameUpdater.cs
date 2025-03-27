@@ -14,7 +14,7 @@ public class MockGameUpdater : GameUpdater
 		cancellationToken.ThrowIfCancellationRequested();
 
 		HandChoice opponentHand = GetRandomOpponentChoice();
-		GameResult playerResult = RockPaperScissorsUtility.GetResult(playerHand, opponentHand);
+		GameResult playerResult = RockPaperScissorsUtility.CompareHands(playerHand, opponentHand);
 
 		return new RoundResult(
 			playerHand,

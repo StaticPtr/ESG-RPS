@@ -60,8 +60,20 @@ public class GameController : MonoBehaviour
 			throw new InvalidOperationException("Invalid choice");
 
 		SetInteractability(false);
-		RoundResult result = await _gameUpdater.SubmitPlayerHand(playerChoice, _cancellationTokenSource.Token);
-		OnGameRoundCompleted(result);
+
+		try
+		{
+			RoundResult result = await _gameUpdater.SubmitPlayerHand(playerChoice, _cancellationTokenSource.Token);
+			OnGameRoundCompleted(result);
+		}
+		catch (Exception e)
+		{
+			Debug.LogException(e);
+		}
+		finally
+		{
+			SetInteractability(true);
+		}
 	}
 
 	private void OnGameRoundCompleted(RoundResult roundResult)
@@ -74,7 +86,6 @@ public class GameController : MonoBehaviour
 
 		_player.AddMoney(roundResult.PlayerMoneyChange);
 		OnPlayerMoneyUpdated();
-		SetInteractability(true);
 	}
 
 	private string HandChoiceToString (HandChoice result)
