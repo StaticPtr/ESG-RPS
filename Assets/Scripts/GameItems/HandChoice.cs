@@ -6,5 +6,6 @@ public enum HandChoice
 	None,
 	Rock,
 	Paper,
-	Scissors
+	Scissors,
+	Count,
 }

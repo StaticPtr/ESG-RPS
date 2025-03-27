@@ -14,14 +14,19 @@ public class GameController : MonoBehaviour
 	public Text OpponentHandLabel = null!;
 	public Text PlayerNameLabel = null!;
 	public Text PlayerMoneyLabel = null!;
+	public Selectable[] Interactables = Array.Empty<Selectable>();
 
 	private Player? _player;
+	private readonly GameUpdater _gameUpdater = new MockGameUpdater();
 
 	private async void Start()
 	{
+		SetInteractability(false);
+		
 		PlayerInfoLoader playerInfoLoader = new MockPlayerInfoLoader(MockConstants.PLAYER_INFO_RESOURCE);
 		IPlayerInfo playerInfo = await playerInfoLoader.Load(_cancellationTokenSource.Token);
 		_player = new(playerInfo);
+		OnPlayerLoaded();
 	}
 
 	private void OnDestroy()
@@ -29,59 +34,47 @@ public class GameController : MonoBehaviour
 		_cancellationTokenSource.Cancel();
 	}
 
-	private void Update()
+	private void OnPlayerLoaded()
 	{
-		if (_player is null)
-			return;
-		
-		UpdateHud();
+		PlayerNameLabel.text = $"Name: {_player!.Name}";
+		OnPlayerMoneyUpdated();
+		SetInteractability(true);
 	}
-
-	private void UpdateHud()
+	
+	private void OnPlayerMoneyUpdated()
 	{
-		if (_player is null)
-			throw new ArgumentNullException(nameof(_player));
-		
-		PlayerNameLabel.text = $"Name: {_player.Name}";
-		PlayerMoneyLabel.text = $"Money: {_player.Money:C2}";
+		PlayerMoneyLabel.text = $"Money: {_player!.Money:C2}";
 	}
 
 	public void HandlePlayerInput(int choice)
 	{
-		HandChoice playerChoice = HandChoice.None;
-
-		switch (choice)
-		{
-			case 1:
-				playerChoice = HandChoice.Rock;
-				break;
-			case 2:
-				playerChoice = HandChoice.Paper;
-				break;
-			case 3:
-				playerChoice = HandChoice.Scissors;
-				break;
-		}
-
-		UpdateGame(playerChoice);
+		if (!Enum.IsDefined(typeof(HandChoice), choice))
+			throw new InvalidOperationException("Invalid cast to choice");
+		
+		HandlePlayerInput((HandChoice)choice);
 	}
 
-	private void UpdateGame(HandChoice playerChoice)
+	private async void HandlePlayerInput(HandChoice playerChoice)
 	{
-		UpdateGameLoader updateGameLoader = new UpdateGameLoader(playerChoice);
-		updateGameLoader.OnLoaded += OnGameUpdated;
-		updateGameLoader.Load();
+		if (playerChoice is HandChoice.None)
+			throw new InvalidOperationException("Invalid choice");
+
+		SetInteractability(false);
+		RoundResult result = await _gameUpdater.SubmitPlayerHand(playerChoice, _cancellationTokenSource.Token);
+		OnGameRoundCompleted(result);
 	}
 
-	public void OnGameUpdated(Hashtable gameUpdateData)
+	private void OnGameRoundCompleted(RoundResult roundResult)
 	{
 		if (_player is null)
 			throw new ArgumentNullException(nameof(_player));
 		
-		PlayerHandLabel.text = HandChoiceToString((HandChoice)gameUpdateData["resultPlayer"]);
-		OpponentHandLabel.text = HandChoiceToString((HandChoice)gameUpdateData["resultOpponent"]);
+		PlayerHandLabel.text = HandChoiceToString(roundResult.PlayerHand);
+		OpponentHandLabel.text = HandChoiceToString(roundResult.OpponentHand);
 
-		_player.AddMoney((int)gameUpdateData["coinsAmountChange"]);
+		_player.AddMoney(roundResult.PlayerMoneyChange);
+		OnPlayerMoneyUpdated();
+		SetInteractability(true);
 	}
 
 	private string HandChoiceToString (HandChoice result)
@@ -89,5 +82,13 @@ public class GameController : MonoBehaviour
 		//In the future this can go through some sort of localizer.
 		//But the version provided to me could be simplified as:
 		return result.ToString();
+	}
+
+	private void SetInteractability(bool isInteractable)
+	{
+		foreach (Selectable interactable in Interactables)
+		{
+			interactable.interactable = isInteractable;
+		}
 	}
 }
